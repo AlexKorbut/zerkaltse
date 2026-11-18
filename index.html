@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Зеркальце</title>
+<meta name="theme-color" content="#f7c8d6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Зеркальце">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<video id="video" playsinline muted autoplay></video>
+<div id="vignette"></div>
+
+<div id="phrase" aria-live="polite"></div>
+
+<div id="status"></div>
+
+<section id="start-screen">
+  <div class="mirror-icon">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 5 6.2 5c2 0 3.4 1 5.8 3.4C14.4 6 15.8 5 17.8 5 21 5 23.1 8.3 21.6 11.700 19.5 16.400 12 21 12 21z"/></svg>
+  </div>
+  <h1>Зеркальце</h1>
+  <p class="sub">Волшебное зеркальце, которое знает, какая ты</p>
+  <button id="start-btn" type="button">Посмотреться в зеркало</button>
+  <p class="note">Камера нужна только чтобы увидеть, что ты смотришь в зеркало. Фото и видео нигде не сохраняются и никуда не отправляются.</p>
+</section>
+
+<section id="error-screen" hidden>
+  <div class="mirror-icon small">🌸</div>
+  <h2 id="error-title"></h2>
+  <p id="error-text"></p>
+  <button id="retry-btn" type="button">Попробовать ещё раз</button>
+</section>
+
+<button id="heart-btn" type="button" aria-label="Новый комплимент" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 5 6.2 5c2 0 3.4 1 5.8 3.4C14.4 6 15.8 5 17.8 5 21 5 23.1 8.3 21.6 11.700 19.5 16.400 12 21 12 21z"/></svg>
+</button>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

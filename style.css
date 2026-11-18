@@ -1,0 +1,24 @@
+:root{--pink:#f7c8d6;--rose:#e85480;--gold:#d6aa5c;--cream:#fff5f8;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#fde4ec;font-family:-apple-system,"SF Pro Rounded","Helvetica Neue",Arial,sans-serif;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+#video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#fde4ec}
+#vignette{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 0 6px rgba(214,170,92,.85),inset 0 0 90px 10px rgba(247,200,214,.55)}
+#phrase{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top) + 9vh);padding:0 24px;text-align:center;font-family:"Snell Roundhand","Apple Chancery",Georgia,serif;font-size:clamp(32px,9vw,52px);font-weight:700;line-height:1.15;color:#fff;text-shadow:0 2px 12px rgba(232,84,128,.9),0 0 3px rgba(150,40,80,.8);opacity:0;transform:translateY(12px) scale(.96);transition:opacity .6s ease,transform .6s ease;pointer-events:none}
+#phrase.show{opacity:1;transform:none}
+#status{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 112px);text-align:center;color:#fff;font-size:15px;text-shadow:0 1px 6px rgba(150,40,80,.9);opacity:.95;pointer-events:none;padding:0 20px}
+#start-screen,#error-screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center;background:linear-gradient(160deg,#fff5f8 0%,#f9d3df 55%,#f2c48f 140%);color:#7a2a47;z-index:5}
+#start-screen[hidden],#error-screen[hidden],#heart-btn[hidden]{display:none}
+.mirror-icon{width:112px;height:140px;border-radius:50%/45%;border:6px solid var(--gold);background:var(--cream);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(214,170,92,.5);margin-bottom:6px}
+.mirror-icon svg{width:56px;fill:var(--rose)}
+.mirror-icon.small{width:auto;height:auto;border:0;background:none;box-shadow:none;font-size:56px}
+h1{margin:0;font-family:"Snell Roundhand","Apple Chancery",Georgia,serif;font-size:52px}
+h2{margin:0;font-size:24px}
+.sub{margin:0 0 10px;font-size:18px;opacity:.85}
+.note{margin:6px 0 0;font-size:13px;line-height:1.4;opacity:.7;max-width:320px}
+button{font:inherit;border:0;cursor:pointer}
+#start-btn,#retry-btn{padding:18px 30px;border-radius:999px;font-size:20px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f06292,#e85480);box-shadow:0 8px 24px rgba(232,84,128,.45),inset 0 0 0 2px rgba(255,255,255,.35);max-width:100%}
+#start-btn:active,#retry-btn:active{transform:scale(.97)}
+#error-text{margin:0;font-size:17px;line-height:1.45;max-width:340px}
+#heart-btn{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 28px);transform:translateX(-50%);width:76px;height:76px;border-radius:50%;background:rgba(255,245,248,.88);box-shadow:0 6px 22px rgba(232,84,128,.5),0 0 0 3px var(--gold);display:flex;align-items:center;justify-content:center;z-index:4;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#heart-btn svg{width:40px;fill:var(--rose);transition:transform .2s}
+#heart-btn:active svg,#heart-btn.beat svg{transform:scale(1.3)}
