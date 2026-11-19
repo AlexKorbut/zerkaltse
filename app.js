@@ -1,25 +1,28 @@
-// ============ ФРАЗЫ: меняй здесь ============
+// ============ ФРАЗЫ (голос Саши): текст и файл ============
 const PHRASES = [
-  "Да ты самая красивая",
-  "Ну какая же ты красотка",
-  "Улыбнись, тебе очень идёт",
-  "Саша тебя очень любит",
-  "Ты сегодня просто сияешь",
-  "Какие у тебя красивые глаза",
-  "Ты невероятная",
-  "С тобой любой день становится лучше",
-  "Ты моё любимое чудо",
-  "Ты красивая и снаружи, и внутри",
-  "Какая же ты милая",
-  "Тебе так идёт быть собой",
-  "Ты делаешь мир теплее",
-  "Саша от тебя без ума",
-  "Ты прекрасна, и это не обсуждается",
-  "Ты очень-очень любимая",
+  { text: "Котик, ты сегодня невероятная", src: "audio/01.m4a" },
+  { text: "Белочка моя, какая же ты красивая", src: "audio/02.m4a" },
+  { text: "Карен, ты самая красивая", src: "audio/03.m4a" },
+  { text: "Кариночка, ты просто чудо", src: "audio/04.m4a" },
+  { text: "Любовь моя, ты прекрасна", src: "audio/05.m4a" },
+  { text: "Ты такая модельная!", src: "audio/06.m4a" },
+  { text: "Да ты самая красивая", src: "audio/07.m4a" },
+  { text: "Ну какая же красотка", src: "audio/08.m4a" },
+  { text: "Котик, эти глаза сводят меня с ума", src: "audio/09.m4a" },
+  { text: "Кариночка, тебе всё идёт", src: "audio/10.m4a" },
+  { text: "Любовь моя, я тебя обожаю", src: "audio/11.m4a" },
+  { text: "Белочка, ты сегодня огонь", src: "audio/12.m4a" },
+  { text: "Вот это девушка, вот это красота", src: "audio/13.m4a" },
+  { text: "Карен, обложка журнала отдыхает", src: "audio/14.m4a" },
+  { text: "Я самый счастливый, потому что ты моя", src: "audio/15.m4a" },
+  { text: "Котик, не смотри так, я влюбляюсь ещё сильнее", src: "audio/16.m4a" },
 ];
-// Фраза, когда она улыбается
-const SMILE_PHRASES = ["Вот эта улыбка самая лучшая"];
-// ============================================
+// Фразы, когда она улыбается
+const SMILE_PHRASES = [
+  { text: "Вот эта улыбка самая лучшая", src: "audio/17.m4a" },
+  { text: "Кариночка, улыбайся чаще, ты сияешь", src: "audio/18.m4a" },
+];
+// ==========================================================
 
 import { FaceLandmarker, FilesetResolver } from "./vendor/vision_bundle.mjs";
 
@@ -39,17 +42,33 @@ const startScreen = $("start-screen"), errorScreen = $("error-screen"), heartBtn
 let stream = null, landmarker = null, running = false, rafId = 0;
 let lastPhrase = "", lastSpeakAt = 0, lastSmileAt = -Infinity;
 let faceSince = 0, lastFaceAt = 0, hadFace = false, smileSince = 0, lastDetect = 0;
-let ruVoice = null, hideTimer = 0, absentAtAppear = Infinity, greeted = false;
+let hideTimer = 0, absentAtAppear = Infinity, greeted = false;
+
+// ---- аудио: один общий плеер, «разбуженный» касанием (требование iOS) ----
+const player = new Audio();
+player.preload = "auto";
+const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+const blobUrls = new Map();
+let audioUnlocked = false, playToken = 0;
+let ruVoice = null;
 
 function pickVoice() {
   const voices = speechSynthesis.getVoices().filter((v) => v.lang && v.lang.toLowerCase().replace("_", "-").startsWith("ru"));
-  if (!voices.length) { ruVoice = null; return; }
-  const female = voices.find((v) => /milena|katya|alena|irina|anna|female|женск/i.test(v.name));
-  ruVoice = female || voices.find((v) => v.default) || voices[0];
+  ruVoice = voices.find((v) => /milena|katya|alena|irina|anna|female|женск/i.test(v.name)) || voices.find((v) => v.default) || voices[0] || null;
 }
 if ("speechSynthesis" in window) {
   pickVoice();
   speechSynthesis.addEventListener?.("voiceschanged", pickVoice);
+}
+
+async function preloadClips() {
+  for (const p of [...PHRASES, ...SMILE_PHRASES]) {
+    if (blobUrls.has(p.src)) continue;
+    try {
+      const r = await fetch(p.src);
+      if (r.ok) blobUrls.set(p.src, URL.createObjectURL(await r.blob()));
+    } catch (e) { /* возьмём по ссылке при воспроизведении */ }
+  }
 }
 
 function setStatus(t) { statusEl.textContent = t || ""; }
@@ -61,7 +80,7 @@ function show(text) {
   hideTimer = setTimeout(() => phraseEl.classList.remove("show"), 6500);
 }
 
-function speak(text) {
+function speakFallback(text) {
   if (!("speechSynthesis" in window)) return;
   try {
     speechSynthesis.cancel();
@@ -73,25 +92,40 @@ function speak(text) {
   } catch (e) { /* текст на экране всё равно виден */ }
 }
 
-function isSpeaking() { return "speechSynthesis" in window && speechSynthesis.speaking; }
-
-function sayFrom(list) {
-  let pool = list.filter((p) => p !== lastPhrase);
-  if (!pool.length) pool = list;
-  const text = pool[Math.floor(Math.random() * pool.length)];
-  lastPhrase = text;
-  lastSpeakAt = performance.now();
-  show(text);
-  speak(text);
+function playClip(p) {
+  try {
+    player.pause();
+    const token = ++playToken;
+    player.onerror = () => { if (token === playToken) speakFallback(p.text); };
+    player.src = blobUrls.get(p.src) || p.src;
+    player.currentTime = 0;
+    const pr = player.play();
+    if (pr && pr.catch) pr.catch((err) => { if (token === playToken && !(err && err.name === "AbortError")) speakFallback(p.text); });
+  } catch (e) { speakFallback(p.text); }
 }
 
-function unlockSpeech() {
-  // iOS разрешает речь только после касания: «прогреваем» тихим произнесением
-  if (!("speechSynthesis" in window)) return;
+function isSpeaking() {
+  return (!player.paused && !player.ended) || ("speechSynthesis" in window && speechSynthesis.speaking);
+}
+
+function sayFrom(list) {
+  let pool = list.filter((p) => p.text !== lastPhrase);
+  if (!pool.length) pool = list;
+  const p = pool[Math.floor(Math.random() * pool.length)];
+  lastPhrase = p.text;
+  lastSpeakAt = performance.now();
+  show(p.text);
+  playClip(p);
+}
+
+function unlockAudio() {
+  // iOS разрешает звук только после касания: «прогреваем» общий плеер тишиной
+  if (audioUnlocked) return;
   try {
-    const u = new SpeechSynthesisUtterance(" ");
-    u.volume = 0; u.lang = SPEECH_LANG;
-    speechSynthesis.speak(u);
+    player.src = SILENT_WAV;
+    const pr = player.play();
+    if (pr && pr.then) pr.then(() => { audioUnlocked = true; }).catch(() => {});
+    else audioUnlocked = true;
   } catch (e) {}
 }
 
@@ -189,7 +223,8 @@ function loop() {
 
 async function begin() {
   errorScreen.hidden = true;
-  unlockSpeech();
+  unlockAudio();
+  preloadClips();
   startScreen.hidden = true;
   setStatus("Включаю зеркальце…");
   try {
@@ -226,7 +261,7 @@ async function begin() {
 $("start-btn").addEventListener("click", begin);
 $("retry-btn").addEventListener("click", begin);
 heartBtn.addEventListener("click", () => {
-  unlockSpeech();
+  unlockAudio();
   heartBtn.classList.add("beat");
   setTimeout(() => heartBtn.classList.remove("beat"), 300);
   sayFrom(PHRASES);
@@ -235,6 +270,7 @@ heartBtn.addEventListener("click", () => {
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     stopCamera();
+    player.pause();
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     if (!errorScreen.hidden) return;
     heartBtn.hidden = true; startScreen.hidden = false; setStatus("");
